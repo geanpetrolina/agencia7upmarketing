@@ -1,0 +1,1 @@
+import type {Config} from 'tailwindcss';export default {content:['./index.html','./src/**/*.{ts,tsx}'],theme:{extend:{colors:{up:'#008FD5',deep:'#08005F',cyan:'#00B7FF',ink:'#111827',muted:'#5B6472',surface:'#F5F7FA'}}},plugins:[]} satisfies Config;
