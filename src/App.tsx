@@ -1,9 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'framer-motion'
 import {
-  ArrowRight, BrainCircuit, Check, ChevronDown, ExternalLink, GitBranch, Menu,
-  MessageCircle, MousePointer2, Play, ShieldCheck, Sparkles, Workflow, X, Zap,
-  Activity, ChartNoAxesCombined
+  ArrowLeft, ArrowRight, BrainCircuit, Check, ChevronDown, ExternalLink, GitBranch, Menu,
+  MessageCircle, MousePointer2, Play, ShieldCheck, Sparkles, Workflow, X, Zap, Activity
 } from 'lucide-react'
 
 const WA_PHONE = '5587988195026'
@@ -28,48 +27,40 @@ function Button({ children, href = WA, secondary = false }: {
   secondary?: boolean
 }) {
   const external = href.startsWith('http')
-  return (
-    <a className={`btn ${secondary ? 'btn-secondary' : ''}`} href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
-      {children}<ArrowRight size={16} />
-    </a>
-  )
+  return <a className={`btn ${secondary ? 'btn-secondary' : ''}`} href={href} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined}>
+    {children}<ArrowRight size={16} />
+  </a>
 }
 
 function Reveal({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
   const reduce = useReducedMotion()
-  return (
-    <motion.div
-      className={className}
-      initial={reduce ? false : { opacity: 0, y: 24 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.12 }}
-      transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}
-    >{children}</motion.div>
-  )
+  return <motion.div className={className}
+    initial={reduce ? false : { opacity: 0, y: 24 }}
+    whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+    viewport={{ once: true, amount: 0.12 }}
+    transition={{ duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] }}>
+    {children}
+  </motion.div>
 }
 
 function Navbar() {
   const [open, setOpen] = useState(false)
   const [solid, setSolid] = useState(false)
-
   useEffect(() => {
     const handleScroll = () => setSolid(window.scrollY > 24)
     handleScroll()
     window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  return (
-    <header className={`navbar ${solid ? 'solid' : ''}`}>
-      <div className="container nav-inner">
-        <Logo />
-        <nav className="desktop-nav">{nav.map(([label, id]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
-        <div className="nav-cta"><a href={WA} target="_blank" rel="noopener noreferrer">DIAGNOSTICAR OPERAÇÃO <ArrowRight size={14} /></a></div>
-        <button className="mobile-menu" onClick={() => setOpen(!open)} aria-label={open ? 'Fechar menu' : 'Abrir menu'}>{open ? <X /> : <Menu />}</button>
-      </div>
-      {open && <div className="mobile-panel">{nav.map(([label, id]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)}>{label}</a>)}<a className="mobile-action" href={WA} target="_blank" rel="noopener noreferrer">DIAGNOSTICAR OPERAÇÃO <ArrowRight size={16} /></a></div>}
-    </header>
-  )
+  return <header className={`navbar ${solid ? 'solid' : ''}`}>
+    <div className="container nav-inner">
+      <Logo />
+      <nav className="desktop-nav">{nav.map(([label, id]) => <a key={id} href={`#${id}`}>{label}</a>)}</nav>
+      <div className="nav-cta"><a href={WA} target="_blank" rel="noopener noreferrer">DIAGNOSTICAR OPERAÇÃO <ArrowRight size={14} /></a></div>
+      <button className="mobile-menu" onClick={() => setOpen(!open)} aria-label={open ? 'Fechar menu' : 'Abrir menu'}>{open ? <X /> : <Menu />}</button>
+    </div>
+    {open && <div className="mobile-panel">{nav.map(([label, id]) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)}>{label}</a>)}<a className="mobile-action" href={WA} target="_blank" rel="noopener noreferrer">DIAGNOSTICAR OPERAÇÃO <ArrowRight size={16} /></a></div>}
+  </header>
 }
 
 function SectionLabel({ number, title }: { number: string; title: string }) {
@@ -146,13 +137,27 @@ const testimonials = [
   { name:'Comercial Almeida', label:'Depoimento em vídeo', video:'/assets/videos/almeida.mp4', poster:'/assets/depoimentos/almeida.jpg' },
 ]
 
+function HorizontalCarousel({ children, label, className = '' }: { children: React.ReactNode; label: string; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const move = (direction: number) => ref.current?.scrollBy({ left: direction * Math.min(ref.current.clientWidth * .78, 760), behavior: 'smooth' })
+  return <div className={`carousel-shell ${className}`}>
+    <div className="carousel-controls"><span>{label}</span><div><button onClick={() => move(-1)} aria-label="Anterior"><ArrowLeft size={16}/></button><button onClick={() => move(1)} aria-label="Próximo"><ArrowRight size={16}/></button></div></div>
+    <div className="testimonial-grid" ref={ref}>{children}</div>
+  </div>
+}
+
 function VideoModal({ item, onClose }: { item: typeof testimonials[number]; onClose: () => void }) {
   return <div className="video-modal" role="dialog" aria-modal="true" onClick={onClose}><div className="video-modal-inner" onClick={e=>e.stopPropagation()}><button onClick={onClose} aria-label="Fechar"><X/></button><video src={item.video} poster={item.poster} controls autoPlay playsInline /><div><span>{item.label}</span><h3>{item.name}</h3></div></div></div>
 }
 
 function Proof() {
   const [selected, setSelected] = useState<typeof testimonials[number] | null>(null)
-  return <section className="section proof" id="provas"><div className="container"><Reveal><SectionLabel number="08" title="Prova"/><div className="proof-heading"><div><h2>Não conte só o que fazemos.<br /><span>Veja quem já percebeu.</span></h2><p>Depoimentos em vídeo e evidências visuais entram no centro da operação — porque autoridade também precisa ser demonstrada.</p></div><div className="proof-stat"><b>+7</b><span>depoimentos<br/>disponibilizados</span></div></div></Reveal><div className="testimonial-grid">{testimonials.map((item,i)=><Reveal key={item.name} delay={i*.05}><button className={`testimonial-card ${i===0?'featured':''}`} onClick={()=>setSelected(item)}><div className="testimonial-media"><img src={item.poster} alt=""/><span className="play"><Play size={17} fill="currentColor"/></span></div><div className="testimonial-copy"><small>{item.label}</small><strong>{item.name}</strong><span>Assistir depoimento <ArrowRight size={13}/></span></div></button></Reveal>)}</div><Reveal delay={.12}><div className="evidence-grid"><div className="evidence-copy"><span>PROVA OPERACIONAL</span><h3>“Tivemos 9 leads nessa última semana — e a melhor notícia: todos vieram dentro do perfil.”</h3><p>Mensagem compartilhada no contexto do projeto Legal Manager, destacando também leads em tratativa e avanço para proposta.</p></div><div className="evidence-image"><img src="/assets/depoimentos/legal-manager.jpeg" alt="Feedback sobre resultados do Legal Manager"/><a href="/assets/depoimentos/legal-manager.jpeg" target="_blank" rel="noreferrer">Ver evidência <ExternalLink size={13}/></a></div></div></Reveal></div>{selected&&<VideoModal item={selected} onClose={()=>setSelected(null)}/>}</section>
+  return <section className="section proof" id="provas"><div className="container"><Reveal><SectionLabel number="08" title="Prova"/><div className="proof-heading"><div><h2>Não conte só o que fazemos.<br /><span>Veja quem já percebeu.</span></h2><p>Depoimentos em vídeo e evidências visuais entram no centro da operação — porque autoridade também precisa ser demonstrada.</p></div><div className="proof-stat"><b>+5</b><span>depoimentos<br/>em vídeo</span></div></div></Reveal>
+    <HorizontalCarousel label="ARRASTE PARA EXPLORAR">
+      {testimonials.map((item,i)=><Reveal key={item.name} delay={i*.04}><button className="testimonial-card" onClick={()=>setSelected(item)}><div className="testimonial-media"><img src={item.poster} alt="" /><span className="play"><Play size={17} fill="currentColor"/></span></div><div className="testimonial-copy"><small>{item.label}</small><strong>{item.name}</strong><span>Assistir depoimento <ArrowRight size={13}/></span></div></button></Reveal>)}
+    </HorizontalCarousel>
+    <Reveal delay={.12}><div className="evidence-grid"><div className="evidence-copy"><span>PROVA OPERACIONAL</span><h3>“Tivemos 9 leads nessa última semana — e a melhor notícia: todos vieram dentro do perfil.”</h3><p>Mensagem compartilhada no contexto do projeto Legal Manager, destacando também leads em tratativa e avanço para proposta.</p></div><div className="evidence-image"><img src="/assets/depoimentos/legal-manager.jpeg" alt="Feedback sobre resultados do Legal Manager"/><a href="/assets/depoimentos/legal-manager.jpeg" target="_blank" rel="noreferrer">Ver evidência <ExternalLink size={13}/></a></div></div></Reveal>
+  </div>{selected&&<VideoModal item={selected} onClose={()=>setSelected(null)}/>}</section>
 }
 
 const certs = [
@@ -167,7 +172,11 @@ const certs = [
 
 function Authority() {
   const [active, setActive] = useState<typeof certs[number] | null>(null)
-  return <section className="section authority" id="autoridade"><div className="container"><Reveal><SectionLabel number="09" title="Autoridade"/><div className="authority-heading"><div><h2>Conhecimento aplicado.<br /><span>Não apenas acumulado.</span></h2><p>Certificações e formações que sustentam as camadas de aquisição, dados, mídia, IA e crescimento da operação.</p></div><div className="authority-badge"><ShieldCheck size={18}/><span>FORMAÇÃO CONTÍNUA</span></div></div></Reveal><div className="cert-grid">{certs.map((cert,i)=><Reveal key={cert.title} delay={i*.04}><button className="cert-card" onClick={()=>setActive(cert)}><div className="cert-image"><img src={cert.img} alt={cert.title}/><span>AMPLIAR <ExternalLink size={12}/></span></div><div className="cert-meta"><b>{cert.title}</b><small>{cert.meta}</small></div></button></Reveal>)}</div></div>{active&&<div className="cert-modal" onClick={()=>setActive(null)}><div className="cert-modal-inner" onClick={e=>e.stopPropagation()}><button onClick={()=>setActive(null)} aria-label="Fechar"><X/></button><img src={active.img} alt={active.title}/><div><b>{active.title}</b><span>{active.meta}</span></div></div></div>}</section>
+  return <section className="section authority" id="autoridade"><div className="container"><Reveal><SectionLabel number="09" title="Autoridade"/><div className="authority-heading"><div><h2>Conhecimento aplicado.<br /><span>Não apenas acumulado.</span></h2><p>Certificações e formações que sustentam as camadas de aquisição, dados, mídia, IA e crescimento da operação.</p></div><div className="authority-badge"><ShieldCheck size={18}/><span>FORMAÇÃO CONTÍNUA</span></div></div></Reveal>
+    <HorizontalCarousel label="ARRASTE PARA EXPLORAR" className="authority-carousel">
+      {certs.map((cert,i)=><Reveal key={cert.title} delay={i*.03}><button className="cert-card" onClick={()=>setActive(cert)}><div className="cert-image"><img src={cert.img} alt={cert.title}/><span>AMPLIAR <ExternalLink size={12}/></span></div><div className="cert-meta"><b>{cert.title}</b><small>{cert.meta}</small></div></button></Reveal>)}
+    </HorizontalCarousel>
+  </div>{active&&<div className="cert-modal" onClick={()=>setActive(null)}><div className="cert-modal-inner" onClick={e=>e.stopPropagation()}><button onClick={()=>setActive(null)} aria-label="Fechar"><X/></button><img src={active.img} alt={active.title}/><div><b>{active.title}</b><span>{active.meta}</span></div></div></div>}</section>
 }
 
 function FAQ() {
@@ -185,7 +194,9 @@ function Footer() {
   return <footer><div className="container footer-grid"><div><Logo/><p>7UP — Engenharia de Receita & Growth.</p></div><div className="footer-links">{nav.map(([label,id])=><a key={id} href={`#${id}`}>{label}</a>)}</div><div className="footer-meta"><span>© {new Date().getFullYear()} 7UP Consultoria em Marketing</span><a href={WA} target="_blank" rel="noopener noreferrer">WhatsApp <ArrowRight size={13}/></a></div></div></footer>
 }
 
-function WhatsAppButton() { return <a className="wa-float" href={WA} target="_blank" rel="noopener noreferrer" aria-label="Falar com a 7UP pelo WhatsApp" title="Falar com a 7UP pelo WhatsApp"><MessageCircle size={23}/></a> }
+function WhatsAppButton() {
+  return <a className="wa-float" href={WA} target="_blank" rel="noopener noreferrer" aria-label="Falar com a 7UP pelo WhatsApp" title="Falar com a 7UP pelo WhatsApp"><MessageCircle size={23}/></a>
+}
 
 export default function App() {
   return <><Navbar/><main><Hero/><BeliefBreak/><Positioning/><RevenueOS/><RevenueXRay/><ProcessTimeline/><Solutions/><IdealClient/><Proof/><Authority/><FAQ/><FinalCTA/></main><Footer/><WhatsAppButton/></>
